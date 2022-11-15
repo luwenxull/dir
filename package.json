@@ -1,0 +1,16 @@
+{
+  "name": "dir",
+  "version": "1.0.0",
+  "description": "",
+  "main": "serve.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fastify": "^4.9.2",
+    "file-type": "^18.0.0"
+  }
+}
