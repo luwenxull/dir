@@ -1,8 +1,20 @@
-// const { readFile } = require('fs')
 const { stat, readFile, readdir } = require('fs/promises')
+const { parseArgs } = require('util')
+const { normalize } = require('path')
 const zlib = require('zlib')
 const process = require('process')
 
+const { values } = parseArgs({
+  args: process.argv.slice(2), options: {
+    root: {
+      type: 'string',
+    }
+  }
+})
+
+if (!Object.prototype.hasOwnProperty.call(values, 'root')) {
+  throw new Error('Root directory not specified')
+}
 
 // Require the framework and instantiate it
 const fastify = require('fastify')({ logger: true })
@@ -19,11 +31,15 @@ const start = async () => {
 
 (async () => {
   const { fileTypeFromBuffer } = await import('file-type')
-  fastify.get('/', async (request, reply) => {
-    const { path } = request.query
-    const st = await stat(path)
+  fastify.get('/api/file', async (request, reply) => {
+    const { path = '' } = request.query
+    const abp = normalize(`${values.root}/${path}`)
+    if (!abp.startsWith(values.root)) {
+      throw new Error('Invalid path')
+    }
+    const st = await stat(abp)
     if (st.isDirectory()) {
-      const files = await readdir(path, {
+      const files = await readdir(abp, {
         withFileTypes: true
       })
       reply.header('Content-Type', 'application/json;charset=utf-8')
@@ -43,7 +59,7 @@ const start = async () => {
         )
       }))
     } else {
-      const buffer = await readFile(path)
+      const buffer = await readFile(abp)
       const data = await fileTypeFromBuffer(buffer);
       if (data) {
         reply.header('Content-Type', data.mime)
